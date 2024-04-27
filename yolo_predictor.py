@@ -29,7 +29,9 @@ class Predictor:
 
     def get_img(self, img_name: str = None, cap=None) -> np.array:
         if cap:
-            _, image = cap.read()
+            ret, image = cap.read()
+            if not(ret):
+                return [False]*4
         else:
             image = cv2.imread(self.path_data_dir + "/" + img_name)
         h, w = image.shape[:2]
@@ -147,7 +149,7 @@ class Predictor:
             cap = cv2.VideoCapture(video_file)
             _, image = cap.read()
             h, w = image.shape[:2]
-            fourcc = cv2.VideoWriter_fourcc(*"XVID")
+            fourcc = cv2.VideoWriter_fourcc(*'MPEG')
             out = cv2.VideoWriter(
                 "/Users/alina/PycharmProjects/obj_detection/data/video/output.avi",
                 fourcc,
@@ -158,19 +160,22 @@ class Predictor:
             cnt = 0
             while True:
                 cnt += 1
+
                 img, transform_img, h, w = self.get_img(cap=cap)
+                if type(img) is bool:
+                    break
+
                 boxes, confidences, class_ids = self.make_prediction(
                     transform_img, h, w
                 )
                 res_img = self.draw_frame(boxes, confidences, class_ids, img)
                 out.write(res_img)
-                out.release()
-                cv2.destroyAllWindows()
 
-                cv2.imshow("image", res_img)
+                # cv2.imshow("image", res_img)
 
-                if ord("q") == cv2.waitKey(1):
+                if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
             cap.release()
+            out.release()
             cv2.destroyAllWindows()
