@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import yaml
-
+import os
 
 CONFIDENCE, SCORE_THRESHOLD, IOU_THRESHOLD = 0.5, 0.5, 0.5
 CONF_PATH = '/Users/alina/PycharmProjects/obj_detection/conf/main_conf.yaml'
@@ -16,11 +16,13 @@ class Predictor():
         self.yolo_conf, self.weights_path, self.processed_path = main_conf['yolo_conf'], main_conf['weights_path'], main_conf['processed_path']
         self.labels_path = main_conf['labels']
         self.labels = open(self.labels_path).read().strip().split("\n")
+        self.path_data_dir = main_conf['dataset']
+        self.dataset = os.listdir(main_conf['dataset'])
         self.colors = np.random.randint(0, 255, size=(len(self.labels), 3), dtype="uint8")
         self.model = cv2.dnn.readNetFromDarknet(self.yolo_conf, self.weights_path)
 
-    def get_img(self, path: str = "/Users/alina/PycharmProjects/obj_detection/dog.jpg") -> np.array:
-        image = cv2.imread(path)
+    def get_img(self, img_name: str = "/Users/alina/PycharmProjects/obj_detection/dog.jpg") -> np.array:
+        image = cv2.imread(self.path_data_dir + '/' + img_name)
         h, w = image.shape[:2]
         transform_img = cv2.dnn.blobFromImage(image, 1/255.0, (416, 416), swapRB=True, crop=False)
 
@@ -92,19 +94,14 @@ class Predictor():
 
         return image
 
-    def val(self, img_folder=None):
-        if img_folder:
-            img, transform_img, h, w = self.get_img(img_folder)
-        else:
-            img, transform_img, h, w = self.get_img()
-        boxes, confidences, class_ids = self.make_prediction(transform_img, h, w)
-        res_img = self.draw_frame(boxes, confidences, class_ids, img)
-        answer = cv2.imwrite(self.processed_path + 'result_example.jpg', res_img)
-        if answer:
-            print('Image saved successfully')
-        else:
-            print('Unable to save image')
-
-if __name__ == '__main__':
-    yolo = Predictor()
-    yolo.val()
+    def val(self, samples=1):
+        for i in range(samples):
+            path = self.dataset[i]
+            img, transform_img, h, w = self.get_img(path)
+            boxes, confidences, class_ids = self.make_prediction(transform_img, h, w)
+            res_img = self.draw_frame(boxes, confidences, class_ids, img)
+            answer = cv2.imwrite(self.processed_path + f'result_example_{i}.jpg', res_img)
+            if answer:
+                print('Image saved successfully')
+            else:
+                print('Unable to save image')
