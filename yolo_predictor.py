@@ -4,30 +4,38 @@ import yaml
 import os
 
 CONFIDENCE, SCORE_THRESHOLD, IOU_THRESHOLD = 0.5, 0.5, 0.5
-CONF_PATH = '/Users/alina/PycharmProjects/obj_detection/conf/main_conf.yaml'
+CONF_PATH = "/Users/alina/PycharmProjects/obj_detection/conf/main_conf.yaml"
 font_scale, thickness = 1, 1
 
 
-class Predictor():
+class Predictor:
     def __init__(self):
         with open(CONF_PATH, "r") as yamlfile:
             main_conf = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
-        self.yolo_conf, self.weights_path, self.processed_path = main_conf['yolo_conf'], main_conf['weights_path'], main_conf['processed_path']
-        self.labels_path = main_conf['labels']
+        self.yolo_conf, self.weights_path, self.processed_path = (
+            main_conf["yolo_conf"],
+            main_conf["weights_path"],
+            main_conf["processed_path"],
+        )
+        self.labels_path = main_conf["labels"]
         self.labels = open(self.labels_path).read().strip().split("\n")
-        self.path_data_dir = main_conf['dataset']
-        self.dataset = os.listdir(main_conf['dataset'])
-        self.colors = np.random.randint(0, 255, size=(len(self.labels), 3), dtype="uint8")
+        self.path_data_dir = main_conf["dataset"]
+        self.dataset = os.listdir(main_conf["dataset"])
+        self.colors = np.random.randint(
+            0, 255, size=(len(self.labels), 3), dtype="uint8"
+        )
         self.model = cv2.dnn.readNetFromDarknet(self.yolo_conf, self.weights_path)
 
     def get_img(self, img_name: str = None, cap=None) -> np.array:
         if cap:
             _, image = cap.read()
         else:
-            image = cv2.imread(self.path_data_dir + '/' + img_name)
+            image = cv2.imread(self.path_data_dir + "/" + img_name)
         h, w = image.shape[:2]
-        transform_img = cv2.dnn.blobFromImage(image, 1/255.0, (416, 416), swapRB=True, crop=False)
+        transform_img = cv2.dnn.blobFromImage(
+            image, 1 / 255.0, (416, 416), swapRB=True, crop=False
+        )
 
         return image, transform_img, h, w
 
@@ -78,22 +86,44 @@ class Predictor():
 
                 # draw rectangle and text name
                 color = [int(c) for c in self.colors[class_ids[i]]]
-                cv2.rectangle(image, (x, y), (x + w, y + h), color=color, thickness=thickness)
+                cv2.rectangle(
+                    image, (x, y), (x + w, y + h), color=color, thickness=thickness
+                )
                 text = f"{self.labels[class_ids[i]]}: {confidences[i]:.2f}"
 
-                (text_width, text_height) = \
-                cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, fontScale=font_scale, thickness=thickness)[0]
+                (text_width, text_height) = cv2.getTextSize(
+                    text,
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=font_scale,
+                    thickness=thickness,
+                )[0]
                 text_offset_x = x
                 text_offset_y = y - 5
-                box_coords = ((text_offset_x, text_offset_y), (text_offset_x + text_width + 2, text_offset_y - text_height))
+                box_coords = (
+                    (text_offset_x, text_offset_y),
+                    (text_offset_x + text_width + 2, text_offset_y - text_height),
+                )
                 overlay = image.copy()
-                cv2.rectangle(overlay, box_coords[0], box_coords[1], color=color, thickness=cv2.FILLED)
+                cv2.rectangle(
+                    overlay,
+                    box_coords[0],
+                    box_coords[1],
+                    color=color,
+                    thickness=cv2.FILLED,
+                )
 
                 # add opacity
                 image = cv2.addWeighted(overlay, 0.6, image, 0.4, 0)
                 # add text to image
-                cv2.putText(image, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX,
-                            fontScale=font_scale, color=(0, 0, 0), thickness=thickness)
+                cv2.putText(
+                    image,
+                    text,
+                    (x, y - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=font_scale,
+                    color=(0, 0, 0),
+                    thickness=thickness,
+                )
 
         return image
 
@@ -102,25 +132,36 @@ class Predictor():
             for i in range(samples):
                 path = self.dataset[i]
                 img, transform_img, h, w = self.get_img(path)
-                boxes, confidences, class_ids = self.make_prediction(transform_img, h, w)
+                boxes, confidences, class_ids = self.make_prediction(
+                    transform_img, h, w
+                )
                 res_img = self.draw_frame(boxes, confidences, class_ids, img)
-                answer = cv2.imwrite(self.processed_path + f'result_example_{i}.jpg', res_img)
+                answer = cv2.imwrite(
+                    self.processed_path + f"result_example_{i}.jpg", res_img
+                )
                 if answer:
-                    print('Image saved successfully')
+                    print("Image saved successfully")
                 else:
-                    print('Unable to save image')
+                    print("Unable to save image")
         else:
             cap = cv2.VideoCapture(video_file)
             _, image = cap.read()
             h, w = image.shape[:2]
             fourcc = cv2.VideoWriter_fourcc(*"XVID")
-            out = cv2.VideoWriter("/Users/alina/PycharmProjects/obj_detection/data/video/output.avi", fourcc, 20.0, (w, h))
+            out = cv2.VideoWriter(
+                "/Users/alina/PycharmProjects/obj_detection/data/video/output.avi",
+                fourcc,
+                20.0,
+                (w, h),
+            )
 
             cnt = 0
             while True:
                 cnt += 1
                 img, transform_img, h, w = self.get_img(cap=cap)
-                boxes, confidences, class_ids = self.make_prediction(transform_img, h, w)
+                boxes, confidences, class_ids = self.make_prediction(
+                    transform_img, h, w
+                )
                 res_img = self.draw_frame(boxes, confidences, class_ids, img)
                 out.write(res_img)
                 out.release()
