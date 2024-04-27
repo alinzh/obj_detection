@@ -21,8 +21,11 @@ class Predictor():
         self.colors = np.random.randint(0, 255, size=(len(self.labels), 3), dtype="uint8")
         self.model = cv2.dnn.readNetFromDarknet(self.yolo_conf, self.weights_path)
 
-    def get_img(self, img_name: str = "/Users/alina/PycharmProjects/obj_detection/dog.jpg") -> np.array:
-        image = cv2.imread(self.path_data_dir + '/' + img_name)
+    def get_img(self, img_name: str = None, cap=None) -> np.array:
+        if cap:
+            _, image = cap.read()
+        else:
+            image = cv2.imread(self.path_data_dir + '/' + img_name)
         h, w = image.shape[:2]
         transform_img = cv2.dnn.blobFromImage(image, 1/255.0, (416, 416), swapRB=True, crop=False)
 
@@ -94,14 +97,39 @@ class Predictor():
 
         return image
 
-    def val(self, samples=1):
-        for i in range(samples):
-            path = self.dataset[i]
-            img, transform_img, h, w = self.get_img(path)
-            boxes, confidences, class_ids = self.make_prediction(transform_img, h, w)
-            res_img = self.draw_frame(boxes, confidences, class_ids, img)
-            answer = cv2.imwrite(self.processed_path + f'result_example_{i}.jpg', res_img)
-            if answer:
-                print('Image saved successfully')
-            else:
-                print('Unable to save image')
+    def val(self, samples=1, video_file=False):
+        if not video_file:
+            for i in range(samples):
+                path = self.dataset[i]
+                img, transform_img, h, w = self.get_img(path)
+                boxes, confidences, class_ids = self.make_prediction(transform_img, h, w)
+                res_img = self.draw_frame(boxes, confidences, class_ids, img)
+                answer = cv2.imwrite(self.processed_path + f'result_example_{i}.jpg', res_img)
+                if answer:
+                    print('Image saved successfully')
+                else:
+                    print('Unable to save image')
+        else:
+            cap = cv2.VideoCapture(video_file)
+            _, image = cap.read()
+            h, w = image.shape[:2]
+            fourcc = cv2.VideoWriter_fourcc(*"XVID")
+            out = cv2.VideoWriter("/Users/alina/PycharmProjects/obj_detection/data/video/output.avi", fourcc, 20.0, (w, h))
+
+            cnt = 0
+            while True:
+                cnt += 1
+                img, transform_img, h, w = self.get_img(cap=cap)
+                boxes, confidences, class_ids = self.make_prediction(transform_img, h, w)
+                res_img = self.draw_frame(boxes, confidences, class_ids, img)
+                out.write(res_img)
+                out.release()
+                cv2.destroyAllWindows()
+
+                cv2.imshow("image", res_img)
+
+                if ord("q") == cv2.waitKey(1):
+                    break
+
+            cap.release()
+            cv2.destroyAllWindows()
