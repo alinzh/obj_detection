@@ -2,30 +2,41 @@ import cv2
 import numpy as np
 import yaml
 import os
+from ultralytics import YOLO
+import onnx
 
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+
+import argparse
+
+import cv2.dnn
+import numpy as np
+
+from ultralytics.utils import ASSETS, yaml_load
+from ultralytics.utils.checks import check_yaml
+
+CLASSES = yaml_load(check_yaml("coco8.yaml"))["names"]
 CONFIDENCE, SCORE_THRESHOLD, IOU_THRESHOLD = 0.5, 0.5, 0.5
 CONF_PATH = "/Users/alina/PycharmProjects/obj_detection/conf/main_conf.yaml"
 font_scale, thickness = 1, 1
-
 
 class Predictor:
     def __init__(self):
         with open(CONF_PATH, "r") as yamlfile:
             main_conf = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
-        self.yolo_conf, self.weights_path, self.processed_path = (
-            main_conf["yolo_conf"],
-            main_conf["weights_path"],
-            main_conf["processed_path"],
-        )
+        self.processed_path = main_conf["processed_path"]
+
         self.labels_path = main_conf["labels"]
         self.labels = open(self.labels_path).read().strip().split("\n")
         self.path_data_dir = main_conf["dataset"]
         self.dataset = os.listdir(main_conf["dataset"])
-        self.colors = np.random.randint(
-            0, 255, size=(len(self.labels), 3), dtype="uint8"
-        )
-        self.model = cv2.dnn.readNetFromDarknet(self.yolo_conf, self.weights_path)
+        self.colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
+        self.model = YOLO('/train/runs/detect/yolov8n_custom/weights/best.onnx')
+        onnx_path = self.model.export(format="onnx")
+        onnx.checker.check_model(onnx_path)
+        self.model: cv2.dnn.Net = cv2.dnn.readNetFromONNX(onnx_path)
+
 
     def get_img(self, img_name: str = None, cap=None) -> np.array:
         if cap:
@@ -34,110 +45,125 @@ class Predictor:
                 return [False]*4
         else:
             image = cv2.imread(self.path_data_dir + "/" + img_name)
-        h, w = image.shape[:2]
-        transform_img = cv2.dnn.blobFromImage(
-            image, 1 / 255.0, (416, 416), swapRB=True, crop=False
+        return image
+
+    def draw_bounding_box(self, img, class_id, confidence, x, y, x_plus_w, y_plus_h):
+        """
+        Draws bounding boxes on the input image based on the provided arguments.
+
+        Args:
+            img (numpy.ndarray): The input image to draw the bounding box on.
+            class_id (int): Class ID of the detected object.
+            confidence (float): Confidence score of the detected object.
+            x (int): X-coordinate of the top-left corner of the bounding box.
+            y (int): Y-coordinate of the top-left corner of the bounding box.
+            x_plus_w (int): X-coordinate of the bottom-right corner of the bounding box.
+            y_plus_h (int): Y-coordinate of the bottom-right corner of the bounding box.
+        """
+        label = f"{CLASSES[class_id]} ({confidence:.2f})"
+        color = self.colors[class_id]
+        cv2.rectangle(img, (x, y), (x_plus_w, y_plus_h), color, 2)
+        cv2.putText(
+            img,
+            label,
+            (x, y - 5),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=font_scale,
+            color=color,
+            thickness=thickness,
         )
 
-        return image, transform_img, h, w
+    def make_prediction(self, original_image):
+        """
+        Main function to load ONNX train, perform inference, draw bounding boxes, and display the output image.
 
-    def make_prediction(self, input, h, w):
-        self.model.setInput(input)
+        Args:
+            onnx_model (str): Path to the ONNX train.
+            input_image (str): Path to the input image.
 
-        # получаем имена всех слоев
-        ln = self.model.getLayerNames()
-        ln = [ln[i - 1] for i in self.model.getUnconnectedOutLayers()]
-        # first 4 values represent the object's location:
-        # - coordinates (x, y) for the center point,
-        # - width and height of box
-        layer_outputs = self.model.forward(ln)
+        Returns:
+            list: List of dictionaries containing detection information such as class_id, class_name, confidence, etc.
+        """
+        [height, width, _] = original_image.shape
 
-        boxes, confidences, class_ids = [], [], []
+        # Prepare a square image for inference
+        length = max((height, width))
+        image = np.zeros((length, length, 3), np.uint8)
+        image[0:height, 0:width] = original_image
 
-        # for each layer in outputs
-        for output in layer_outputs:
-            # for each object in objects
-            for detection in output:
+        scale = length / 640
 
-                scores = detection[5:]
-                class_id = np.argmax(scores)
-                confidence = scores[class_id]
-                # save objects just with height confidence
-                if confidence > CONFIDENCE:
+        blob = cv2.dnn.blobFromImage(image, scalefactor=1 / 255, size=(640, 640), swapRB=True)
+        self.model.setInput(blob)
 
-                    box = detection[:4] * np.array([w, h, w, h])
-                    (centerX, centerY, width, height) = box.astype("int")
+        # Perform inference
+        outputs = self.model.forward()
 
-                    x = int(centerX - (width / 2))
-                    y = int(centerY - (height / 2))
+        # Prepare output array
+        outputs = np.array([cv2.transpose(outputs[0])])
+        rows = outputs.shape[1]
 
-                    boxes.append([x, y, int(width), int(height)])
-                    confidences.append(float(confidence))
-                    class_ids.append(class_id)
+        boxes = []
+        scores = []
+        class_ids = []
 
-        return boxes, confidences, class_ids
+        # Iterate through output to collect bounding boxes, confidence scores, and class IDs
+        for i in range(rows):
+            classes_scores = outputs[0][i][4:]
+            (minScore, maxScore, minClassLoc, (x, maxClassIndex)) = cv2.minMaxLoc(classes_scores)
+            if maxScore >= CONFIDENCE:
+                box = [
+                    outputs[0][i][0] - (0.5 * outputs[0][i][2]),
+                    outputs[0][i][1] - (0.5 * outputs[0][i][3]),
+                    outputs[0][i][2],
+                    outputs[0][i][3],
+                ]
+                boxes.append(box)
+                scores.append(maxScore)
+                class_ids.append(maxClassIndex)
 
-    def draw_frame(self, boxes, confidences, class_ids, image):
-        idxs = cv2.dnn.NMSBoxes(boxes, confidences, SCORE_THRESHOLD, IOU_THRESHOLD)
+        # Apply NMS (Non-maximum suppression)
+        result_boxes = cv2.dnn.NMSBoxes(boxes, scores, 0.25, 0.45, 0.5)
 
-        if len(idxs) > 0:
-            for i in idxs.flatten():
-                # coordinates for rectangle
-                x, y = boxes[i][0], boxes[i][1]
-                w, h = boxes[i][2], boxes[i][3]
+        detections = []
 
-                # draw rectangle and text name
-                color = [int(c) for c in self.colors[class_ids[i]]]
-                cv2.rectangle(
-                    image, (x, y), (x + w, y + h), color=color, thickness=thickness
-                )
-                text = f"{self.labels[class_ids[i]]}: {confidences[i]:.2f}"
+        # Iterate through NMS results to draw bounding boxes and labels
+        for i in range(len(result_boxes)):
+            index = result_boxes[i]
+            box = boxes[index]
+            detection = {
+                "class_id": class_ids[index],
+                "class_name": CLASSES[class_ids[index]],
+                "confidence": scores[index],
+                "box": box,
+                "scale": scale,
+            }
+            detections.append(detection)
+            self.draw_bounding_box(
+                original_image,
+                class_ids[index],
+                scores[index],
+                round(box[0] * scale),
+                round(box[1] * scale),
+                round((box[0] + box[2]) * scale),
+                round((box[1] + box[3]) * scale),
+            )
 
-                (text_width, text_height) = cv2.getTextSize(
-                    text,
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=font_scale,
-                    thickness=thickness,
-                )[0]
-                text_offset_x = x
-                text_offset_y = y - 5
-                box_coords = (
-                    (text_offset_x, text_offset_y),
-                    (text_offset_x + text_width + 2, text_offset_y - text_height),
-                )
-                overlay = image.copy()
-                cv2.rectangle(
-                    overlay,
-                    box_coords[0],
-                    box_coords[1],
-                    color=color,
-                    thickness=cv2.FILLED,
-                )
+        # # Display the image with bounding boxes
+        # cv2.imshow("image", original_image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
-                # add opacity
-                image = cv2.addWeighted(overlay, 0.6, image, 0.4, 0)
-                # add text to image
-                cv2.putText(
-                    image,
-                    text,
-                    (x, y - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=font_scale,
-                    color=(0, 0, 0),
-                    thickness=thickness,
-                )
-
-        return image
+        return original_image
 
     def val(self, samples=1, video_file=False):
         if not video_file:
             for i in range(samples):
                 path = self.dataset[i]
-                img, transform_img, h, w = self.get_img(path)
-                boxes, confidences, class_ids = self.make_prediction(
-                    transform_img, h, w
+                img = self.get_img(path)
+                res_img = self.make_prediction(
+                    img
                 )
-                res_img = self.draw_frame(boxes, confidences, class_ids, img)
                 answer = cv2.imwrite(
                     self.processed_path + f"result_example_{i}.jpg", res_img
                 )
@@ -161,18 +187,15 @@ class Predictor:
             while True:
                 cnt += 1
 
-                img, transform_img, h, w = self.get_img(cap=cap)
-                if type(img) is bool:
+                img = self.get_img(cap=cap)
+                if type(img[0]) is bool:
                     break
 
-                boxes, confidences, class_ids = self.make_prediction(
-                    transform_img, h, w
+                res_img = self.make_prediction(
+                    img
                 )
-                res_img = self.draw_frame(boxes, confidences, class_ids, img)
                 out.write(res_img)
-
                 # cv2.imshow("image", res_img)
-
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
