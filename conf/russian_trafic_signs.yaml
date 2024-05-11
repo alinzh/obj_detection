@@ -155,6 +155,6 @@ names:
   153: '7_14'
   154: '8_23'
   155: 'pothole'
-path: /Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/yolo_format
+path: /Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset
 train: train/images
 val: valid/images

@@ -120,9 +120,9 @@ coco_json_val = f'{root_dataset}/val_anno.json'
 path_to_images = f'{root_dataset}/rtsd-frames/rtsd-frames'
 
 # пути к папкам для формата yolo
-path_yolo_dataset = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/yolo_format'
-output_train = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/yolo_format/train'
-output_valid = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/yolo_format/valid'
+path_yolo_dataset = '/datasets/traffic_sign/dataset'
+output_train = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset/train'
+output_valid = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset/valid'
 
 # Для каждого класса в датасете получаем samples_per_class объектов и сохраняем их id в filtered_id.
 # В дальнейшем для обучения мы будем использовать только аннотации с id из filter_annotation_id.

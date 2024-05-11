@@ -28,7 +28,7 @@ def val(model):
 
 def predictor(model, models_dir):
     model.predict(
-        source='/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/yolo_format/valid/images',
+        source='/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset/valid/images',
         imgsz=1280,
         epochs=1,
         batch=2,
@@ -44,8 +44,8 @@ def main(path_model, models_dir, conf):
 
 
 if __name__ == "__main__":
-    path_model = '/model/best.pt'
-    models_dir = '/model/model_v_russian_traffic_s'
+    path_model = '/models/best.pt'
+    models_dir = '/models/model_v_russian_traffic_s'
     conf = '/Users/alina/PycharmProjects/obj_detection/conf/russian_trafic_signs.yaml'
     main()
 
