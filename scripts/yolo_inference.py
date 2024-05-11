@@ -17,7 +17,7 @@ from ultralytics.utils.checks import check_yaml
 
 CLASSES = yaml_load(check_yaml("coco8.yaml"))["names"]
 CONFIDENCE, SCORE_THRESHOLD, IOU_THRESHOLD = 0.5, 0.5, 0.5
-CONF_PATH = "/Users/alina/PycharmProjects/obj_detection/conf/main_conf.yaml"
+CONF_PATH = "/conf/main_conf.yaml"
 font_scale, thickness = 1, 1
 
 class Predictor:
@@ -156,7 +156,7 @@ class Predictor:
 
         return original_image
 
-    def val(self, samples=1, video_file=False):
+    def val(self, samples=1, video_file: str = False):
         if not video_file:
             for i in range(samples):
                 path = self.dataset[i]
@@ -202,3 +202,17 @@ class Predictor:
             cap.release()
             out.release()
             cv2.destroyAllWindows()
+
+
+def run_on_images(yolo: Predictor, samples: int) -> None:
+    yolo.val(samples=samples)
+
+
+def run_on_video(yolo: Predictor, video_path: str):
+    yolo.val(video_file=video_path)
+
+
+if __name__ == "__main__":
+    yolo = Predictor()
+    run_on_images(15)
+
