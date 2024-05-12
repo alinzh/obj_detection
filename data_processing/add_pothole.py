@@ -1,5 +1,4 @@
 import os
-import shutil
 
 path_pothole_da_dir = "/Users/alina/PycharmProjects/obj_detection/datasets/pothole_dataset_v8"
 test_labels_dir = f"{path_pothole_da_dir}/valid/labels/"
@@ -11,6 +10,7 @@ test_labels_list = os.listdir(test_labels_dir)
 train_labels_list = os.listdir(train_labels_dir)
 test_img_list = os.listdir(test_labels_dir)
 train_img_list = os.listdir(train_labels_dir)
+
 
 def change_class_idx():
     # change class in test data
@@ -36,6 +36,7 @@ def change_class_idx():
 
         with open(f"{train_labels_dir}{path}", "w") as file:
             file.write(new_data)
+
 
 if __name__ == "__main__":
     change_class_idx()

@@ -3,10 +3,7 @@ import json
 import os
 
 from tqdm.notebook import tqdm
-from ultralytics import YOLO
 import pandas as pd
-import clearml
-import yaml
 
 def get_df_annotations(annotations_file, label_map_file, min_area):
     with open(annotations_file, 'r', encoding='utf-8') as file:

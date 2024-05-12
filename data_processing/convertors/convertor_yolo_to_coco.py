@@ -22,7 +22,7 @@ class COCOFormatMaker():
         return [round(x1), round(y1), round(w), round(h)]
 
     def categories(self):
-        with open('/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/label_map.json', 'r') as f:
+        with open('/datasets/traffic_sign/label_map.json', 'r') as f:
             categ = json.load(f)
         for key in categ.keys():
             d = {}
@@ -95,7 +95,6 @@ class COCOFormatMaker():
 
 
     def from_yolo_to_coco(self, save_name, input_dir, output_dir, categ=[{"id": 156, "name": "pothole"}]):
-
         # Define the categories for the COCO dataset
         categories = categ
 
@@ -186,12 +185,12 @@ class COCOFormatMaker():
 
 if __name__ == "__main__":
     creator = COCOFormatMaker(
-        "/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset/train/",
-        "/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset/valid/"
+        "/datasets/traffic_sign/dataset/train/",
+        "/datasets/traffic_sign/dataset/valid/"
     )
     dirs_yolo = [
         '/Users/alina/Desktop/pothole_dataset_v8 2/all/train/',
         '/Users/alina/Desktop/pothole_dataset_v8 2/all/test/'
     ]
-    save_path = "/Users/alina/PycharmProjects/obj_detection"
+    save_path = "/"
     creator.main(dirs_yolo, save_path)
