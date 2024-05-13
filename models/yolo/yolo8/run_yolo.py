@@ -28,10 +28,10 @@ def val(model):
 
 def predictor(model, models_dir):
     model.predict(
-        source='/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset/valid/images',
+        source='/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign_pothole/dataset/valid/images',
         imgsz=1280,
         epochs=1,
-        batch=2,
+        batch=4,
         name=models_dir,
         save=True
     )
@@ -39,15 +39,15 @@ def predictor(model, models_dir):
 
 def main(path_model, models_dir, conf):
     model = YOLO(path_model)
-    train(model, models_dir, conf)
+    # train(model, models_dir, conf)
     val(model)
 
 
 if __name__ == "__main__":
-    path_model = '/models/best.pt'
+    path_model = '/Users/alina/PycharmProjects/obj_detection/models/yolo/last.pt'
     models_dir = '/models/model_v_russian_traffic_s'
     conf = '/Users/alina/PycharmProjects/obj_detection/conf/russian_trafic_signs.yaml'
-    main()
+    main(path_model, models_dir, conf)
 
 
 

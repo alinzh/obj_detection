@@ -2,8 +2,8 @@ import clearml
 import yaml
 
 
-path_yolo_dataset = '/datasets/traffic_sign/dataset'
-root_dataset = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign'
+path_yolo_dataset = '/datasets/traffic_sign_pothole/dataset'
+root_dataset = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign_pothole'
 only_one_class = False
 labels_path = f'{root_dataset}/labels.txt'
 
@@ -15,7 +15,7 @@ data = {
 
 if only_one_class:
     data['names'] = {
-        0: 'traffic_sign'
+        0: 'traffic_sign_pothole'
     }
 else:
     with open(labels_path, 'r') as file:
@@ -23,7 +23,7 @@ else:
         id2class = dict(zip(range(len(class_names)), class_names))
         data['names'] = id2class
 
-with open('/datasets/traffic_sign/russian_trafic_signs.yaml', 'w') as file:
+with open('/datasets/traffic_sign_pothole/russian_trafic_signs.yaml', 'w') as file:
     yaml.dump(data, file)
 
 clearml.browser_login()

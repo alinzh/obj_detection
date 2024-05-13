@@ -103,7 +103,7 @@ def convert_coco_to_yolo(coco_json, output_dir, image_dir, filter_anno=None, onl
         shutil.copy(path_to_image, images_output_path)
 
 # путь к датасету
-root_dataset = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign'
+root_dataset = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign_pothole'
 
 # путь к label2id словарю
 label_map_file = f'{root_dataset}/label_map.json'
@@ -117,9 +117,9 @@ coco_json_val = f'{root_dataset}/val_anno.json'
 path_to_images = f'{root_dataset}/rtsd-frames/rtsd-frames'
 
 # пути к папкам для формата yolo
-path_yolo_dataset = '/datasets/traffic_sign/dataset'
-output_train = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset/train'
-output_valid = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/dataset/valid'
+path_yolo_dataset = '/datasets/traffic_sign_pothole/dataset'
+output_train = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign_pothole/dataset/train'
+output_valid = '/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign_pothole/dataset/valid'
 
 # Для каждого класса в датасете получаем samples_per_class объектов и сохраняем их id в filtered_id.
 # В дальнейшем для обучения мы будем использовать только аннотации с id из filter_annotation_id.

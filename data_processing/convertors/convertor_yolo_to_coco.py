@@ -22,7 +22,7 @@ class COCOFormatMaker():
         return [round(x1), round(y1), round(w), round(h)]
 
     def categories(self):
-        with open('/datasets/traffic_sign/label_map.json', 'r') as f:
+        with open('/datasets/traffic_sign_pothole/label_map.json', 'r') as f:
             categ = json.load(f)
         for key in categ.keys():
             d = {}
@@ -168,9 +168,9 @@ class COCOFormatMaker():
 
     def main(self, dirs_yolo, save_path):
         anno_to_merge = [
-                    ['/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/train_anno.json',
+                    ['/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign_pothole/train_anno_traffic_sign.json',
                      '/Users/alina/PycharmProjects/obj_detection/train_anno_pothole.json'],
-            ['/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign/val_anno.json',
+            ['/Users/alina/PycharmProjects/obj_detection/datasets/traffic_sign_pothole/val_anno_traffic_sign.json',
              '/Users/alina/PycharmProjects/obj_detection/test_anno_pothole.json']
         ]
         names_pothole = ['train_anno_pothole', 'test_anno_pothole']
@@ -185,8 +185,8 @@ class COCOFormatMaker():
 
 if __name__ == "__main__":
     creator = COCOFormatMaker(
-        "/datasets/traffic_sign/dataset/train/",
-        "/datasets/traffic_sign/dataset/valid/"
+        "/datasets/traffic_sign_pothole/dataset/train/",
+        "/datasets/traffic_sign_pothole/dataset/valid/"
     )
     dirs_yolo = [
         '/Users/alina/Desktop/pothole_dataset_v8 2/all/train/',
