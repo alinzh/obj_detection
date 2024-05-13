@@ -13,4 +13,7 @@ Both datasets are available at the following links:
 - [potholes](https://www.dropbox.com/s/qvglw8pqo16769f/pothole_dataset_v8.zip?dl=1)
 - [Russian traffic signs](https://www.kaggle.com/datasets/watchman/rtsd-dataset/data)
  
-Download weights for Yolo8m from [here](https://drive.google.com/file/d/1H4E8yIXL7RlM6tRJayRhyHlWpOJd0L5Y/view?usp=sharing).
+Download weights for trained Yolo8m from [here](https://drive.google.com/file/d/1H4E8yIXL7RlM6tRJayRhyHlWpOJd0L5Y/view?usp=sharing).
+## Summary
+Not bed!
+![summary](https://github.com/alinzh/road_detection/blob/main/summary/summary_yolo8.png)                  
