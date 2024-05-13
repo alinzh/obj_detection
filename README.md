@@ -1,5 +1,7 @@
 ## Road-detection: detection of traffic signs and potholes by ML-models
-Implementation of detection by transfer learning with popular Yolo8 and models from Detectrons zoo. Training takes place on a custom dataset assembled from several.
+Implementation of detection by transfer learning with popular Yolo8 and Fast-RCNN from Detectrons zoo. Training takes place on a custom dataset assembled from several.
+
+![screenshot](https://github.com/alinzh/road_detection/blob/main/data/processed_img/traffic_sign_pothole/example.jpg)
 
 The dataset includes 157 classes:
 - 156 - different types of Russian traffic signs
