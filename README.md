@@ -15,5 +15,5 @@ Both datasets are available at the following links:
  
 Download weights for trained Yolo8m from [here](https://drive.google.com/file/d/1H4E8yIXL7RlM6tRJayRhyHlWpOJd0L5Y/view?usp=sharing).
 ## Summary
-Not bed!
+Not bad!
 ![summary](https://github.com/alinzh/road_detection/blob/main/summary/summary_yolo8.png)                  
